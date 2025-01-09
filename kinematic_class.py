@@ -1,7 +1,10 @@
-'''
-Adaptação de opencap-processing/utilsKinematics.py 
-https://github.com/stanfordnmbl/opencap-processing/blob/main/utilsKinematics.py
-'''
+# Arquivo: kinematic_class.py
+# Adaptação de opencap-processing/utilsKinematics.py 
+# ( https://github.com/stanfordnmbl/opencap-processing/blob/main/utilsKinematics.py )
+#
+# :: O arquivo utiliza funções adaptadas da aplicação de processamento open cap, principalmente retirando 
+# :: funcionalidades desnecessárias para a aplicação atual.
+#
 
 import os
 import opensim

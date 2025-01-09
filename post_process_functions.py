@@ -1,9 +1,14 @@
+# Arquivo: post_process_functions.py
+#  
+# :: Funções para pós processamento de dados open sim e jumpy 
+
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import resample
 import opensim as osim
-import pandas as pd
 import os
+from resampy import resample 
+
+
 
 def format_numpy_array (data, column_name,time=False):
 
@@ -18,26 +23,26 @@ def format_numpy_array (data, column_name,time=False):
 
     return np_data
 
-def detect_jump(data, stability_time = 1, sample_rate = 60):
-
+def detect_jump(data, stability_time = 1, sample_rate = 60): 
+    # Procura um ponto onde a posição do membro escolhido se afasta 2 vezes o desvio padrão positivamente da média
+    
     max_height_index = data.argmax()
-    stability_window_size = stability_time*sample_rate   # janela de frames para se analisar estabildiade
 
-    stability_window_end   = max_height_index - (1*sample_rate) # 1 segundo antes do ponto mais alto do salto
-    stability_window_start = max(stability_window_end-stability_window_size , 0)
-    print(stability_window_start,stability_window_end)
+    stability_window_end   = stability_time*sample_rate
+    stability_window_start = 0
+
    
     jump_start_index = stability_window_end
     
     baseline_data    = data[stability_window_start:stability_window_end]
     base_line_mean   = baseline_data.mean()
     baseline_std     = np.std(baseline_data)
-    threshold        = base_line_mean + 3 * baseline_std # Regra empírica do desvio padrão (ajustada para 3 empiricamente :) )
+
+    threshold        = base_line_mean + 2 * baseline_std # Regra empírica do desvio padrão
 
     while(data[jump_start_index] < threshold):
         jump_start_index += 1
     
-    print(jump_start_index)
     return jump_start_index, max_height_index
 
 def extract_com_data_oc(output_full_path):
@@ -58,7 +63,6 @@ def extract_com_data_oc(output_full_path):
     com_acc_column = format_numpy_array(acc_data, "center_of_mass_Y")
 
     max_height_index = com_pos_column.argmax()
-    print(max_height_index)
 
     return  time_column, com_pos_column, com_vel_column, com_acc_column, max_height_index
 
@@ -78,28 +82,43 @@ def extract_com_data_fp(folder_full_path):
     return disp_data, vel_data, acc_data, max_height_index
 
 def exract_com_height_oc(pos_data):
-    com_height = pos_data[60:120].mean()
+    com_height = pos_data[60:120].mean() # Média do centro de massa entre o segundo 1 e 2 dos dados
     return com_height
 
-def crop_signal(signal, middle_point, sample_rate, time = 1.5):
 
-    start_index = max(middle_point - int(time*sample_rate),  0)           #  Volta até 1.5 segundo do momento de altura máxima
-    end_index   = min(middle_point + int(time*sample_rate),  len(signal)) # Avança até 1.5 segundo do momento de altura máxima
 
-    return signal[start_index:end_index]
+def crop_signal(signal, max_height_index, sample_rate=60, time=3):
+
+    window_size = int(time * sample_rate)  # Tamanho fixo do array
+    half_size = window_size // 2          # Metade do tamanho fixo
+
+    # Definir os índices de corte
+    start_index = max(max_height_index - half_size, 0)
+    end_index = min(max_height_index + half_size, len(signal))
+
+    # Extrair a parte válida do sinal
+    cropped_signal = signal[start_index:end_index]
+
+    # Criar o array de tamanho fixo e preencher com zeros
+    fixed_signal = np.full(window_size, np.nan)
+
+    # Determinar onde inserir o sinal extraído no array fixo
+    start_insert = max(half_size - max_height_index, 0)
+    fixed_signal[start_insert:start_insert + len(cropped_signal)] = cropped_signal
+
+    return fixed_signal
+
+
 
 def compare_signals(fp_signal, oc_signal,oc_time, title, cp_directory,file_name):
 
-    fp_signal_downsampled = resample(fp_signal, len(oc_signal))
 
     # Plotar ambos os sinais
     plt.figure(figsize=(10, 6))
 
-    # Sinal original de 60 Hz
     plt.plot(oc_time, oc_signal, label="Open Cap", color='red', alpha=0.7)
 
-    # Sinal downsampled de 1000 Hz para 60 Hz
-    plt.plot(oc_time, fp_signal_downsampled, label="Plataforma de força", color='green', alpha=0.7)
+    plt.plot(oc_time, fp_signal, label="Plataforma de força", color='green', alpha=0.7)
 
     # Configurações do gráfico
     plt.xlabel('Tempo (s)')
@@ -113,19 +132,26 @@ def compare_signals(fp_signal, oc_signal,oc_time, title, cp_directory,file_name)
     plt.grid(True)
     plt.savefig(var_fig_path, dpi=300,format='png')
 
-    mae = np.mean(np.abs(fp_signal_downsampled - oc_signal))
+    plt.pyplot.close()
+
+    mae = np.nanmean(np.abs(fp_signal - oc_signal)) # Utiliza nanmean para calcular a média ignorando valores NaN
     print("[{file_name}] MAE: {mae}".format(file_name = file_name, mae=mae))
 
-    return fp_signal_downsampled, oc_signal
 
 def load_data_from_file(file_name):
 
     data = np.loadtxt(file_name, delimiter=',', skiprows=1)
+    return data
 
-    time = data[:, 0]
-    position = data[:, 1]
-    velocity = data[:, 2]
-    acceleration = data[:, 3]
 
-    return time, [position, velocity, acceleration]
+def downsample_multicolumn(jp_data, fp_sample_rate, oc_sample_rate):
 
+    downsampled_columns = []
+
+    for i in range(jp_data.shape[1]):
+        downsampled_column = resample(jp_data[:, i],fp_sample_rate,oc_sample_rate)
+        downsampled_columns.append(downsampled_column)
+
+    jp_data_downsampled = np.column_stack(downsampled_columns)
+
+    return jp_data_downsampled

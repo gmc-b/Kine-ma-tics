@@ -1,3 +1,8 @@
+# Arquivo: jumpy_functions.py
+# Adaptação de jumpy_simple.py
+#
+# :: O arquivo utiliza funções adaptadas da aplicação jumpy, principalmente retirando 
+# :: funcionalidades desnecessárias para a aplicação atual
 
 
 from scipy import signal, integrate
@@ -125,26 +130,15 @@ def filterForceSignal(time, force, fs, band_type, filter_type, cutoff_freq_Hz, N
     filtered_force = signal.filtfilt(num, den, force)
     return filtered_force
 
-def correctOffset(time, force):
-    signal_min_idx = np.argmin(force)
-    weight_init_estimate = force[0]
-    init_flight_estimate_idx = find(force > weight_init_estimate, order='last', end=signal_min_idx)
-    end_flight_estimate_idx = find(force > weight_init_estimate, order='first', start=signal_min_idx)
-    middle_offset_idx = int((init_flight_estimate_idx + end_flight_estimate_idx) / 2.0)
-    offset_num_samples = int(0.25*(end_flight_estimate_idx - init_flight_estimate_idx))
-    offset_segment = force[middle_offset_idx - int(offset_num_samples/2): middle_offset_idx + int(offset_num_samples/2)]
-    offset = np.mean(offset_segment)
-    corrected_force = force - offset
-    return corrected_force
+
 
 
 def runAnalysisCMJSJ(file_path):
-    # Get data from file
+    
     force, time, fs,mass = getDataFromACP(file_path)
-    # Filter signal
+    
     force = filterForceSignal(time, force, fs, 'lowpass', 'butter', 30, 4)
-    corrected_force = correctOffset(time, force)
-    # Get aceleration, velocity and CM displacement
+    
     acc, vel, disp = getAcelVelDisp(force, fs, mass)
 
     return time, [disp, vel, acc]

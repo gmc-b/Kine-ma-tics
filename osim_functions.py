@@ -1,4 +1,6 @@
-# Open sim analysys function file
+# Arquivo: osim_functions
+#  
+# :: Funções Para utilização da API Open Sim por python
 
 import opensim as osim
 import os
@@ -10,6 +12,7 @@ import matplotlib.pyplot as plt
 POS = 0
 VEL = 1
 ACC = 2
+MODEL = "LaiUhlrich2022_scaled"
 
 def analyse_tool_setup(model,model_full_path,movement_full_path,output_full_path,start_time,final_time,step_interval):
     analyze_tool = osim.AnalyzeTool()
@@ -45,7 +48,7 @@ def body_kinematic_analysis(model,start_time,final_time,step_interval):
     return body_kinematics
 
 def com_analisys(directory_path,mot_file_name,cutoff_frequency = 10):
-    kinematic = kinematics(directory_path,mot_file_name,"LaiUhlrich2022_scaled",lowpass_cutoff_frequency_for_coordinate_values=cutoff_frequency)
+    kinematic = kinematics(directory_path,mot_file_name,MODEL,lowpass_cutoff_frequency_for_coordinate_values=cutoff_frequency)
     oc_pos = kinematic.get_center_of_mass_values(lowpass_cutoff_frequency=cutoff_frequency)
     oc_vel = kinematic.get_center_of_mass_speeds(lowpass_cutoff_frequency=cutoff_frequency)
     oc_acc = kinematic.get_center_of_mass_accelerations(lowpass_cutoff_frequency=cutoff_frequency)
