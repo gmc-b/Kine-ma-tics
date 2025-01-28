@@ -35,6 +35,9 @@ As funções dos arquivos jumpy_functions e kinematic_class foram criadas por ou
 
 ---
 
+## **Coleta**
+Durante a coleta de dados, é necessário que o voluntário permaneça com o corpo completamente estático por 1 segundo e meio. Edite o vídeo OpenCap e dados Jumpy para que esse momento estático ocorra no início dos dados.
+
 ## **Utilização**
 
 ### 1. **Instalação**:
