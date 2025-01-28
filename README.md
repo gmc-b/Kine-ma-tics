@@ -163,52 +163,11 @@ São gerados gráficos desse conjunto na pasta específica no diretório `output
     
 
 *C. Comparação de dados*
-- Os dados de posição, velocidade e aceleração com base no índice de altura máxima de cada conjunto de dados. 
+- Os dados de posição, velocidade e aceleração são alinhados em um mesmo ponto, dado pelo melhor índice de correlação entre as curvas de posição das diferentes fontes.
 - Os dados com maior taxa de amostragem (adquiridos pela plataforma de força) sofrem downsample para a taxa de amostragem dos dados adquiridos pelo opencap (60 Hz).
 - A partir dos sinais gerados pelas análises anteriores, são traçados gráficos de comparação entre o aceleração, velocidade e posição entre métodos de aquisição (OpenCap e Jumpy)
-- É calculado o erro médio absoluto para todos as comparações.
+- É calculado o erro médio absoluto normalizado pela amplitude máxima para todos as comparações.
 
-
----
-
-## **Estrutura do Código**
-
-
-### **Funções Principais**
-#### 1. `opencap_file_analisys(mot_file_list, oc_directory, output_directory)`
-Realiza análise dos arquivos `.mot` do OpenSim.
-- **Entradas**:
-  - `mot_file_list`: Lista de arquivos `.mot`.
-  - `oc_directory`: Diretório com dados do OpenCap.
-  - `output_directory`: Diretório para salvar os resultados.
-- **Saídas**:
-  - Gráficos e arquivos processados no diretório de saída.
-
-#### 2. `jumpy_file_analisys(acp_file_list, output_directory)`
-Realiza análise dos arquivos `.acp` do Jumpy.
-- **Entradas**:
-  - `acp_file_list`: Lista de arquivos `.acp`.
-  - `output_directory`: Diretório para salvar os resultados.
-- **Saídas**:
-  - Gráficos e arquivos processados no diretório de saída.
-
-#### 3. `plot_signals(oc_data, jp_data, cp_directory, file_name)`
-Compara e cria gráficos dos dados biomecânicos sincronizados entre OpenSim e Jumpy.
-- **Entradas**:
-  - `oc_data`: Dados do OpenSim.
-  - `jp_data`: Dados do Jumpy.
-  - `cp_directory`: Diretório para salvar os resultados comparados.
-  - `file_name`: Nome do arquivo de saída.
-- **Saídas**:
-  - Gráficos comparativos e métricas de erro.
-
-#### 4. `main()`
-Função principal que:
-1. Configura diretórios e parâmetros.
-2. Executa as análises e comparações.
-3. Organiza os resultados em diretórios específicos.
-
----
 
 
 
