@@ -60,7 +60,7 @@ Durante a coleta de dados, é necessário que o voluntário permaneça com o cor
     python3.8 -m venv kmt
     .\kmt\Scripts\activate
     python -m pip install -U pip==24.0
-    pip install numpy
+    pip install numpy==1.24.4
     pip install setuptools==56.0.0
     ```
 
@@ -77,6 +77,7 @@ Durante a coleta de dados, é necessário que o voluntário permaneça com o cor
     ```
 
 - Instalação de bibliotecas adicionais:
+    **Volte ao diretório Kine-ma-tics:**
     ```bash
     pip install -r requirements.txt
     ```

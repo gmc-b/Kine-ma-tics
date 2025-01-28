@@ -1,6 +1,6 @@
 # Arquivo: post_process_functions.py
 #  
-# :: Funções para pós processamento de dados opensim e jumpy 
+# :: Funções para pós processamento de dados open sim e jumpy 
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,6 +8,45 @@ import opensim as osim
 import os
 from resampy import resample 
 from scipy.signal import correlate
+
+def format_numpy_array (data, column_name,time=False):
+
+    column_data = osim.ArrayDouble()
+
+    if (time):
+        data.getTimeColumn(column_data)
+    else:
+        data.getDataColumn(column_name, column_data)
+
+    np_data = np.array([column_data.get(i) for i in range(column_data.getSize())])
+
+    return np_data
+
+
+
+def show_column_figure(time, var, label, unit, threshold=None, end_prop=None):
+
+    plt.figure(figsize=(8, 6))
+
+    # Plotar o sinal principal
+    plt.plot(time, var, linestyle='-', color='g', label='Sinal')
+
+    # Adicionar linha horizontal se threshold for fornecido
+    if threshold is not None:
+        plt.axhline(y=threshold, color='r', linestyle='--', label=f'threshold ({threshold:.2f})')
+
+    # Adicionar linha vertical se end_prop for fornecido
+    if end_prop is not None:
+        plt.axvline(x=end_prop, color='g', linestyle='--', label=f'End Prop ({end_prop:.2f})')
+
+    # Configurações do gráfico
+    plt.title(f'{label} X Tempo')
+    plt.xlabel('Tempo (s)')
+    plt.ylabel(f"{label} [{unit}]")
+    plt.grid()
+    plt.legend()
+
+    plt.show()
 
 
 
@@ -27,7 +66,7 @@ def extract_com_data_fp(folder_full_path):
     return disp_data, vel_data, acc_data, max_height_index
 
 def exract_com_height_oc(pos_data):
-    com_height = pos_data[0:60].mean() # Média do centro de massa no primeiro segundo dos dados
+    com_height = pos_data[0:60].mean() # Média do centro de massa no primeiro segundo do vídeo
     return com_height
 
 
@@ -44,13 +83,13 @@ def crop_signal(signal, max_height_index, sample_rate=60, time=6):
     cropped_signal = signal[start_index:end_index]
 
     # Criar np array com NaN para padding
-    cropped_signal = np.full(window_size, np.nan)
+    fixed_signal = np.full(window_size, np.nan)
 
     # Insere no array de tamanho fixo
     start_insert = max(half_size - max_height_index, 0)
-    cropped_signal[start_insert:start_insert + len(cropped_signal)] = cropped_signal
+    fixed_signal[start_insert:start_insert + len(cropped_signal)] = cropped_signal
 
-    return cropped_signal
+    return fixed_signal
 
 
 
@@ -91,7 +130,7 @@ def sync_signals(signal1, signal2, lag):
         signal1_synced[:len1] = signal1
         signal2_synced[:len2-lag] = signal2[lag:]
     else:
-        # Sem lag, copia os sinais originais
+        # Copia os sinais originais, sem lag
         signal1_synced[:] = signal1
         signal2_synced[:] = signal2
 
@@ -122,28 +161,11 @@ def compare_signals(fp_signal, oc_signal,oc_time, title, cp_directory,file_name)
     print("[{file_name}] MAE: {mae:.4f}".format(file_name = file_name, mae=mae))
     return mae
 
-
-
-
-# utils
-
 def load_data_from_file(file_name):
 
     data = np.loadtxt(file_name, delimiter=',', skiprows=1)
     return data
 
-def format_numpy_array (data, column_name,time=False):
-
-    column_data = osim.ArrayDouble()
-
-    if (time):
-        data.getTimeColumn(column_data)
-    else:
-        data.getDataColumn(column_name, column_data)
-
-    np_data = np.array([column_data.get(i) for i in range(column_data.getSize())])
-
-    return np_data
 
 def downsample_multicolumn(jp_data, fp_sample_rate, oc_sample_rate):
 
@@ -181,10 +203,10 @@ def normalized_mae(fp_signal, oc_signal):
     if amplitude == 0:
         raise ValueError("A amplitude do sinal de referência é zero, normalização impossível.")
 
-    # Mean Absolute Error 
+    # Mean Absolute Error # Calcular MAE diretamente
     mae = np.abs(valid_fp_signal - valid_oc_signal).mean()
 
-    # Normalizar o MAE pela amplitude
+    # MAE normalizado pela amplitude
     mae_normalized = mae / amplitude
 
     return mae_normalized
@@ -202,27 +224,3 @@ def save_mae_to_file(file_name,cp_directory, pos_mae, vel_mae, acc_mae):
     with open(full_path, 'w') as file:
         file.write(content)
 
-
-# Debugging
-def show_column_figure(time, var, label, unit, threshold=None, end_prop=None):
-
-    plt.figure(figsize=(8, 6))
-
-    plt.plot(time, var, linestyle='-', color='g', label='Sinal')
-
-    # Adiciona linha horizontal se threshold for fornecido
-    if threshold is not None:
-        plt.axhline(y=threshold, color='r', linestyle='--', label=f'threshold ({threshold:.2f})')
-
-    # Adiciona linha vertical se end_prop for fornecido
-    if end_prop is not None:
-        plt.axvline(x=end_prop, color='g', linestyle='--', label=f'End Prop ({end_prop:.2f})')
-
-    # Configurações do gráfico
-    plt.title(f'{label} X Tempo')
-    plt.xlabel('Tempo (s)')
-    plt.ylabel(f"{label} [{unit}]")
-    plt.grid()
-    plt.legend()
-
-    plt.show()

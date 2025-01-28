@@ -93,8 +93,6 @@ def file_pairing(dir_a, dir_b):
     return matched_files
 
 
-    
-
 def mot_file_com_analysis(mot_file_list,oc_directory,com_output_directory):
     
     for mot_file_path in mot_file_list:
