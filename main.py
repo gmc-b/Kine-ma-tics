@@ -188,7 +188,7 @@ def main():
     main_dir = dirname(abspath(__file__))
     data_path           = os.path.join(main_dir,"data")
     
-    setup_dic           = setup("setup.json")
+    #setup_dic           = setup("setup.json")
     
     analyize_file_path  = "tmp/analyze_setup.xml"
 
