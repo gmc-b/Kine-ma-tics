@@ -77,6 +77,9 @@ def readForceFile(file_path):
 
     i=1
     var_names = []
+    mass = 0
+    data_rate = 0
+
     with open(file_path, 'r') as f:
         first = True
         for line_str in f:
@@ -91,6 +94,7 @@ def readForceFile(file_path):
                     jump_type = "ISO"
                 first = False
 
+            # Parâmetros
             if "(body weight)" in line_str:
                 try:
                     mass = float(line_str.split(f'\t')[0])
@@ -102,13 +106,17 @@ def readForceFile(file_path):
             if "Time (s)" in line_str:
                 var_names = line_str.split(f'\t')
                 break
+
+            if "data rate" in line_str:
+                data_rate = extract_frequency(line_str)
+
             i+=1
     force_data_arr = np.loadtxt(file_path, skiprows=i)
     force_data_dic = {}
     for key in var_names:
         force_data_dic[key] = force_data_arr[:, var_names.index(key)]
     
-    return force_data_dic, var_names, jump_type, mass
+    return force_data_dic, var_names, jump_type, mass, data_rate
 
 
 def getAcelVelDisp(force, fs, mass):
@@ -121,11 +129,11 @@ def getAcelVelDisp(force, fs, mass):
 
 
 def getDataFromACP(file_path):
-    fp_data, var_names, jump_type,mass = readForceFile(file_path)
+    fp_data, var_names, jump_type, mass, data_rate = readForceFile(file_path)
     force = fp_data['Raw Fz (N)']
     time = fp_data['Time (s)']
     fs = int(1/(time[1]-time[0]))
-    return force, time, fs,mass
+    return force, time, fs,mass, data_rate
 
 def filterForceSignal(time, force, fs, band_type, filter_type, cutoff_freq_Hz, N):
     Wn = cutoff_freq_Hz / fs * 2
@@ -137,7 +145,7 @@ def filterForceSignal(time, force, fs, band_type, filter_type, cutoff_freq_Hz, N
 
 def runAnalysisCMJSJ(file_path):
     
-    force, time, fs,mass = getDataFromACP(file_path)
+    force, time, fs,mass, data_rate = getDataFromACP(file_path)
     
     force = filterForceSignal(time, force, fs, 'lowpass', 'butter', 30, 4)
     
@@ -145,7 +153,7 @@ def runAnalysisCMJSJ(file_path):
 
 
 
-    return time, [disp, vel, acc] 
+    return time, [disp, vel, acc], data_rate
     
 ######################################################################################################
 
@@ -206,6 +214,27 @@ def findPropulsionFlight(acel, disp, cropped_time, end_braking):
 
 ######################### File functions #########################
 
+import re
+
+def extract_frequency(string):
+    # Extrai a frequência (inteiro) de uma string no formato:
+    # "XXXX @ YYYY (number of samples, data rate)"
+
+    match = re.search(r'@ (\d+)', string)  # Busca um número após "@ "
+    
+    if match:
+        num = int(match.group(1))  # Retorna o número encontrado como inteiro
+    else:
+        flag_nofreq = True
+        while flag_nofreq:
+            user_input = input("Frequência não encontrada. Insira manualmente um valor inteiro: ")
+            if user_input.isdigit():
+                num =  int(user_input)
+                flag_nofreq = False
+            else:
+                print("Entrada inválida. Digite um número inteiro.")
+
+    return num
 
 def save_jp_data_to_file(time,fp_data,jp_output_directory,file_name):
     disp, vel, acc = fp_data[0],fp_data[1],fp_data[2]

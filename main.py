@@ -119,7 +119,7 @@ def jumpy_file_analisys(acp_file_list,jp_output_directory):
         acp_file_name = Path(acp_file_path).stem
         
         
-        time, fp_data = jp_f.runAnalysisCMJSJ(acp_file_path)
+        time, fp_data, data_rate = jp_f.runAnalysisCMJSJ(acp_file_path)
         
         file_name = "jumpy_cmj_"+acp_file_name+".txt"
 
@@ -133,12 +133,12 @@ def jumpy_file_analisys(acp_file_list,jp_output_directory):
 
         jp_f.save_jp_data_to_file(time,fp_data,jp_output_directory,file_name)
 
+    return data_rate
 
-def plot_signals(oc_data,jp_data,cp_directory,file_name):
+def plot_signals(oc_data,jp_data,cp_directory,file_name,fp_sample_rate):
     
 
     oc_sample_rate = 60 
-    fp_sample_rate = 1000
 
     jp_data_downsampled = pp_f.downsample_multicolumn(jp_data,fp_sample_rate,oc_sample_rate)
 
@@ -219,8 +219,7 @@ def main():
 
         # Análise
         mot_file_com_analysis(mot_file_list,oc_directory,oc_output_directory)
-        jumpy_file_analisys(acp_file_list,jp_output_directory)
-        
+        jp_sample_rate = jumpy_file_analisys(acp_file_list,jp_output_directory)
 
         # Comparação
         file_pairs = file_pairing(oc_output_directory, jp_output_directory)
@@ -236,7 +235,7 @@ def main():
             
             file_name = Path(oc_file).stem + "_" + Path(jp_file).stem + ".jpg"
 
-            plot_signals(oc_data,jp_data,cp_output_directory,file_name)
+            plot_signals(oc_data,jp_data,cp_output_directory,file_name,jp_sample_rate)
 
 
 
